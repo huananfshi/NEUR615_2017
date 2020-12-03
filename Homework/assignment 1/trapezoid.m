@@ -1,0 +1,21 @@
+function [t, g_syn, v] = trapezoid(dt, T, g_syn_max, tau_alpha, t1, V_syn)
+VCl = -68; %Cl channel Nernst potential, mV
+Cm = 1; %membrane capacitane, µF
+gCl = 0.3; %Cl channel conductance mS/cm^2
+N = ceil(1+T/dt); % steps
+v = zeros(N,1);   %define v(t)
+t = zeros(N,1);  % define t
+g_syn = zeros(N, length(g_syn_max)); % define g_syn
+j = 1; %initial values
+v(j)=VCl;
+a0 = gCl/Cm;
+b0 = gCl*VCl/Cm;
+for j = 2:N
+    t(j) = (j-1)*dt;
+    g_syn(j,:)=g_syn_max.*((t(j)-t1)./tau_alpha).*exp(1-(t(j)-t1)./tau_alpha).*(t(j)>t1);
+    a1 = (gCl+sum(g_syn(j,:)))/Cm;
+    b1 = (gCl*VCl + g_syn(j,:)*V_syn')/Cm;
+    v(j) = ((2/dt - a0)*v(j-1) + b1+ b0)/(2/dt + a1);
+    a0 = a1;
+    b0 = b1;
+end
